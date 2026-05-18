@@ -23,4 +23,3 @@ homeassistant_api: true
 auth_api: true
 options: {}
 schema: {}
-image: "ghcr.io/zikoner/ha-addons/alexa_manager:{arch}"

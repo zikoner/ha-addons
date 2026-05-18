@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alexa Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #07080f;
+    --blue:   #4f8ef7;
+    --purple: #a259ff;
+    --teal:   #00e5c3;
+    --orange: #ff8c42;
+    --yellow: #ffd166;
+    --red:    #ff4d6d;
+    --green:  #06d6a0;
+    --white:  rgba(255,255,255,0.92);
+    --white2: rgba(255,255,255,0.5);
+    --glass:  rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.12);
+    --border2:rgba(255,255,255,0.06);
+    --ff:     'Outfit', sans-serif;
+    --mono:   'JetBrains Mono', monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--ff);background:var(--bg);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+  /* Fond */
+  .bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.22;animation:drift 20s ease-in-out infinite alternate}
+  .orb:nth-child(1){width:500px;height:500px;background:radial-gradient(circle,#4f8ef7,transparent 70%);top:-150px;left:-100px;animation-duration:22s}
+  .orb:nth-child(2){width:400px;height:400px;background:radial-gradient(circle,#a259ff,transparent 70%);top:40%;right:-80px;animation-duration:17s;animation-delay:-8s}
+  .orb:nth-child(3){width:350px;height:350px;background:radial-gradient(circle,#00e5c3,transparent 70%);bottom:-80px;left:35%;animation-duration:25s;animation-delay:-4s}
+  @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(30px,25px) scale(1.06)}}
+  .bg::after{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px);background-size:28px 28px}
+
+  /* Layout */
+  .wrap{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:28px 20px 60px}
+
+  /* Header */
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;animation:fadeDown .5s ease both}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+  .logo-row{display:flex;align-items:center;gap:14px}
+  .logo-icon{width:46px;height:46px;background:linear-gradient(135deg,#00c4ff,#a259ff);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 28px rgba(0,196,255,.35),inset 0 1px 0 rgba(255,255,255,.25)}
+  .logo-title{font-size:22px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(90deg,#fff,#00c4ff,#a259ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .logo-sub{font-family:var(--mono);font-size:10px;color:var(--white2);letter-spacing:2px}
+  .header-right{display:flex;align-items:center;gap:10px}
+  .conn-pill{display:flex;align-items:center;gap:7px;padding:7px 14px;background:var(--glass);border:1px solid var(--border2);border-radius:100px;font-family:var(--mono);font-size:10px;color:var(--white2);letter-spacing:1px}
+  .conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:blink 2s infinite}
+  .conn-dot.off{background:var(--red);box-shadow:0 0 7px var(--red);animation:none}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .btn-sm{padding:7px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--glass);color:var(--white2);font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+  .btn-sm:hover{border-color:rgba(79,142,247,.4);color:#90b8ff;background:rgba(79,142,247,.08)}
+
+  /* Stats bar */
+  .stats-bar{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;animation:fadeUp .5s .1s ease both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .stat-chip{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--glass);border:1px solid var(--border2);border-radius:10px;font-family:var(--mono);font-size:11px;color:var(--white2)}
+  .stat-chip strong{color:var(--white);font-size:14px}
+
+  /* Tabs */
+  .tabs{display:flex;gap:6px;margin-bottom:18px;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:14px;padding:5px;width:fit-content;animation:fadeDown .5s .1s ease both;flex-wrap:wrap}
+  .tab{padding:9px 18px;border-radius:10px;border:none;background:transparent;color:var(--white2);font-family:var(--ff);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+  .tab:hover{color:var(--white)}
+  .tab.active{background:rgba(255,255,255,.1);color:var(--white);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .tab-badge{background:rgba(255,255,255,.1);border-radius:100px;padding:1px 7px;font-size:10px;font-family:var(--mono)}
+  .tab.active .tab-badge{background:rgba(79,142,247,.25);color:#90b8ff}
+
+  /* Toolbar */
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;animation:fadeUp .5s .15s ease both}
+  .search-wrap{flex:1;position:relative}
+  .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.4}
+  .search-inp{width:100%;padding:10px 14px 10px 38px;background:var(--glass);border:1px solid var(--border2);border-radius:12px;color:var(--white);font-family:var(--ff);font-size:13px;outline:none;transition:border-color .2s,background .2s}
+  .search-inp:focus{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.04)}
+  .search-inp::placeholder{color:rgba(255,255,255,.2)}
+  .filter-sel{padding:10px 14px;background:var(--glass);border:1px solid var(--border2);border-radius:12px;color:var(--white2);font-family:var(--mono);font-size:11px;outline:none;cursor:pointer}
+  .filter-sel option{background:#1a1a2e}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;animation:fadeUp .5s .2s ease both}
+
+  /* Card */
+  .card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--border2);border-radius:16px;padding:18px;position:relative;overflow:hidden;transition:border-color .25s,transform .2s,box-shadow .25s}
+  .card::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent)}
+  .card:hover{border-color:rgba(255,255,255,.18);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .card-info{flex:1;min-width:0}
+  .card-name{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+  .card-id{font-family:var(--mono);font-size:10px;color:var(--white2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+
+  /* State */
+  .state-badge{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:100px;font-weight:500}
+  .s-on {background:rgba(6,214,160,.15);color:var(--green)}
+  .s-off{background:rgba(255,255,255,.06);color:var(--white2)}
+  .s-other{background:rgba(79,142,247,.12);color:#90b8ff}
+
+  /* Type badge */
+  .type-b{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;border-radius:6px;font-weight:500}
+  .t-light  {background:rgba(255,209,102,.12);color:#ffd166}
+  .t-switch {background:rgba(79,142,247,.12);color:#90b8ff}
+  .t-scene  {background:rgba(162,89,255,.12);color:#c49aff}
+  .t-script {background:rgba(0,229,195,.12);color:var(--teal)}
+  .t-media  {background:rgba(255,140,66,.12);color:var(--orange)}
+  .t-climate{background:rgba(6,214,160,.12);color:var(--green)}
+  .t-cover  {background:rgba(255,77,109,.12);color:#ff8fa3}
+  .t-other  {background:rgba(255,255,255,.06);color:var(--white2)}
+
+  /* Phrase Alexa */
+  .phrase-box{background:rgba(0,196,255,.06);border:1px solid rgba(0,196,255,.12);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+  .phrase-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,196,255,.6);margin-bottom:4px}
+  .phrase-txt{font-size:13px;font-weight:600;color:#7dd8ff}
+  .phrase-txt em{font-style:normal;color:rgba(255,255,255,.35);font-weight:400}
+
+  /* Actions */
+  .card-actions{display:flex;gap:7px}
+  .act-btn{flex:1;padding:7px 8px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.04);color:var(--white2);font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+  .act-btn:hover{border-color:rgba(79,142,247,.4);color:#90b8ff;background:rgba(79,142,247,.08)}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(7,8,15,.88);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+  .modal-overlay.open{opacity:1;pointer-events:all}
+  .modal{background:rgba(18,20,32,.97);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:32px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,.6);transform:scale(.94) translateY(10px);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+  .modal-overlay.open .modal{transform:scale(1) translateY(0)}
+  .modal-title{font-size:20px;font-weight:800;margin-bottom:6px}
+  .modal-sub{font-size:12px;color:var(--white2);margin-bottom:20px;line-height:1.5;font-family:var(--mono)}
+  .modal-lbl{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--white2);margin-bottom:7px;display:block}
+  .modal-inp{width:100%;padding:11px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:var(--white);font-family:var(--ff);font-size:14px;font-weight:600;outline:none;margin-bottom:8px;transition:border-color .2s}
+  .modal-inp:focus{border-color:rgba(0,196,255,.5)}
+  .modal-hint{font-size:11px;color:rgba(0,196,255,.7);font-family:var(--mono);margin-bottom:20px;padding:8px 12px;background:rgba(0,196,255,.06);border-radius:8px;line-height:1.5}
+  .modal-btns{display:flex;gap:10px}
+  .modal-btn{flex:1;padding:12px;border-radius:11px;border:1px solid var(--border2);font-family:var(--ff);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+  .modal-btn.cancel{background:rgba(255,255,255,.05);color:var(--white2)}
+  .modal-btn.cancel:hover{background:rgba(255,255,255,.08);color:var(--white)}
+  .modal-btn.confirm{background:linear-gradient(135deg,#00c4ff,#a259ff);color:#fff;border:none;box-shadow:0 4px 16px rgba(0,196,255,.25)}
+  .modal-btn.confirm:hover{opacity:.88;transform:translateY(-1px)}
+
+  /* Skeleton */
+  .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:skel 1.5s infinite;border-radius:8px}
+  @keyframes skel{from{background-position:200% 0}to{background-position:-200% 0}}
+
+  /* Empty */
+  .empty{grid-column:1/-1;text-align:center;padding:60px 20px;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.2)}
+  .empty .big{font-size:40px;margin-bottom:12px}
+
+  /* Toast */
+  #toast{position:fixed;bottom:24px;right:24px;z-index:300;padding:12px 20px;background:rgba(18,20,32,.97);border:1px solid rgba(255,255,255,.12);border-radius:12px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.4);transform:translateY(20px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:320px}
+  #toast.show{transform:translateY(0);opacity:1}
+
+  /* Inline edit */
+  .inline-edit{display:none;width:100%;padding:7px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(0,196,255,.35);border-radius:8px;color:var(--white);font-family:var(--ff);font-size:14px;font-weight:700;outline:none;margin-top:4px}
+  .inline-edit.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="bg"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-icon">🔊</div>
+      <div>
+        <div class="logo-title">Alexa Manager</div>
+        <div class="logo-sub">home assistant · contrôle vocal</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="conn-pill">
+        <div class="conn-dot" id="connDot"></div>
+        <span id="connLabel">CHARGEMENT</span>
+      </div>
+      <button class="btn-sm" onclick="load()">↻ Sync</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tab-lights"  onclick="switchTab('lights')">💡 Lumières & Prises <span class="tab-badge" id="badge-lights">0</span></button>
+    <button class="tab"        id="tab-scenes"  onclick="switchTab('scenes')">🎬 Scènes <span class="tab-badge" id="badge-scenes">0</span></button>
+    <button class="tab"        id="tab-scripts" onclick="switchTab('scripts')">⚡ Scripts <span class="tab-badge" id="badge-scripts">0</span></button>
+    <button class="tab"        id="tab-climate" onclick="switchTab('climate')">🌡️ Climat & Volets <span class="tab-badge" id="badge-climate">0</span></button>
+    <button class="tab"        id="tab-media"   onclick="switchTab('media')">📺 Médias <span class="tab-badge" id="badge-media">0</span></button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-inp" id="searchInp" placeholder="Rechercher…" oninput="renderCurrent()">
+    </div>
+    <select class="filter-sel" id="filterState" onchange="renderCurrent()">
+      <option value="all">Tous les états</option>
+      <option value="on">Allumés / Actifs</option>
+      <option value="off">Éteints</option>
+    </select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Modal rename -->
+<div class="modal-overlay" id="modalOv">
+  <div class="modal">
+    <div class="modal-title">✏️ Renommer pour Alexa</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <label class="modal-lbl">Nouveau nom (ce que tu prononces)</label>
+    <input class="modal-inp" id="modalInp" type="text">
+    <div class="modal-hint">
+      🎙 Alexa dira : <strong>"Alexa, allume <span id="modalPreview">…</span>"</strong><br>
+      <small>Le nom sera mis à jour dans Home Assistant</small>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Annuler</button>
+      <button class="modal-btn confirm" onclick="confirmRename()">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Dans l'add-on, l'API est proxifiée localement ──────────────────────────
+const API_BASE = '';   // Même origine, le serveur Python proxifie vers HA
+let allEntities  = [];
+let currentTab   = 'lights';
+let renameTarget = null;
+
+const ICONS = {
+  light:'💡', switch:'🔌', scene:'🎬', script:'⚡',
+  media_player:'📺', climate:'🌡️', cover:'🪟', fan:'🌀',
+  input_boolean:'🔘', automation:'🤖',
+};
+
+// ── Chargement ─────────────────────────────────────────────────────────────
+async function load() {
+  showSkeletons();
+  try {
+    const res = await fetch(`${API_BASE}/api/states`);
+    if (!res.ok) throw new Error();
+    allEntities = await res.json();
+    setConn(true);
+    updateBadges();
+    updateStats();
+    renderCurrent();
+  } catch(e) {
+    setConn(false);
+    toast('❌ Impossible de charger les entités', 'error');
+  }
+}
+
+function setConn(on) {
+  document.getElementById('connDot').className = 'conn-dot' + (on ? '' : ' off');
+  document.getElementById('connLabel').textContent = on ? 'CONNECTÉ' : 'HORS LIGNE';
+}
+
+// ── Onglets ────────────────────────────────────────────────────────────────
+function domain(e) { return e.entity_id.split('.')[0]; }
+
+function tabEntities(tab) {
+  const map = {
+    lights:  e => ['light','switch','input_boolean','fan'].includes(domain(e)),
+    scenes:  e => domain(e) === 'scene',
+    scripts: e => domain(e) === 'script',
+    climate: e => ['climate','cover'].includes(domain(e)),
+    media:   e => domain(e) === 'media_player',
+  };
+  return allEntities.filter(map[tab] || (() => false));
+}
+
+function filtered(entities) {
+  const q = document.getElementById('searchInp').value.toLowerCase();
+  const s = document.getElementById('filterState').value;
+  return entities.filter(e => {
+    const name = (e.attributes.friendly_name || e.entity_id).toLowerCase();
+    const mq = !q || name.includes(q) || e.entity_id.includes(q);
+    const ms = s === 'all' || e.state === s || (s==='on' && ['on','playing','open'].includes(e.state));
+    return mq && ms;
+  });
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  renderCurrent();
+}
+
+function renderCurrent() { render(filtered(tabEntities(currentTab))); }
+
+function updateBadges() {
+  ['lights','scenes','scripts','climate','media'].forEach(t => {
+    document.getElementById('badge-' + t).textContent = tabEntities(t).length;
+  });
+}
+
+function updateStats() {
+  const counts = {
+    total: allEntities.length,
+    lights: allEntities.filter(e => domain(e) === 'light').length,
+    scripts: allEntities.filter(e => domain(e) === 'script').length,
+    scenes: allEntities.filter(e => domain(e) === 'scene').length,
+    on: allEntities.filter(e => e.state === 'on').length,
+  };
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip">Entités <strong>${counts.total}</strong></div>
+    <div class="stat-chip">💡 <strong>${counts.lights}</strong></div>
+    <div class="stat-chip">⚡ Scripts <strong>${counts.scripts}</strong></div>
+    <div class="stat-chip">🎬 Scènes <strong>${counts.scenes}</strong></div>
+    <div class="stat-chip">✅ Actifs <strong>${counts.on}</strong></div>
+  `;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render(entities) {
+  const grid = document.getElementById('grid');
+  if (!entities.length) {
+    grid.innerHTML = `<div class="empty"><div class="big">🔍</div>Aucun résultat</div>`;
+    return;
+  }
+
+  grid.innerHTML = entities.map(e => {
+    const name  = e.attributes.friendly_name || e.entity_id;
+    const dom   = domain(e);
+    const icon  = ICONS[dom] || '📦';
+    const state = e.state;
+    const sc    = ['on','playing','open'].includes(state) ? 's-on' : state==='off' ? 's-off' : 's-other';
+    const tc    = {light:'t-light',switch:'t-switch',scene:'t-scene',script:'t-script',media_player:'t-media',climate:'t-climate',cover:'t-cover'}[dom] || 't-other';
+    const ibg   = {light:'rgba(255,209,102,.15)',switch:'rgba(79,142,247,.15)',scene:'rgba(162,89,255,.15)',script:'rgba(0,229,195,.12)',media_player:'rgba(255,140,66,.15)',climate:'rgba(6,214,160,.12)',cover:'rgba(255,77,109,.12)',fan:'rgba(0,229,195,.1)',input_boolean:'rgba(79,142,247,.12)'}[dom] || 'rgba(255,255,255,.07)';
+    const phrase = alexaPhrase(dom, name);
+    const eid   = e.entity_id.replace(/"/g,'&quot;').replace(/'/g,"\\'");
+    const nesc  = name.replace(/"/g,'&quot;').replace(/'/g,"\\'");
+
+    return `<div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:${ibg}">${icon}</div>
+        <div class="card-info">
+          <div class="card-name">${name}</div>
+          <div class="card-id">${e.entity_id}</div>
+        </div>
+        <div class="card-right">
+          <span class="type-b ${tc}">${dom}</span>
+          <span class="state-badge ${sc}">${state}</span>
+        </div>
+      </div>
+      <div class="phrase-box">
+        <div class="phrase-lbl">🎙 dire à Alexa</div>
+        <div class="phrase-txt">${phrase}</div>
+      </div>
+      <div class="card-actions">
+        <button class="act-btn" onclick="openRename('${eid}','${nesc}')">✏️ Renommer</button>
+        <button class="act-btn" id="tog-${e.entity_id}" onclick="toggle('${eid}','${dom}')">▶ Tester</button>
+        <button class="act-btn" onclick="copyTxt('${phrase.replace(/<[^>]+>/g,'').replace(/'/g,"\\'")}')">📋 Copier</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function alexaPhrase(dom, name) {
+  const n = `<strong>${name}</strong>`;
+  const m = {
+    light:        `<em>Alexa,</em> allume ${n} <em>/ éteins ${n}</em>`,
+    switch:       `<em>Alexa,</em> allume ${n} <em>/ éteins ${n}</em>`,
+    input_boolean:`<em>Alexa,</em> active ${n}`,
+    fan:          `<em>Alexa,</em> allume ${n} <em>/ éteins ${n}</em>`,
+    scene:        `<em>Alexa,</em> active ${n}`,
+    script:       `<em>Alexa,</em> active ${n}`,
+    media_player: `<em>Alexa,</em> allume ${n} <em>/ coupe ${n}</em>`,
+    climate:      `<em>Alexa,</em> règle ${n} <em>sur 21 degrés</em>`,
+    cover:        `<em>Alexa,</em> ouvre ${n} <em>/ ferme ${n}</em>`,
+  };
+  return m[dom] || `<em>Alexa,</em> active ${n}`;
+}
+
+function showSkeletons() {
+  document.getElementById('grid').innerHTML = Array(8).fill('').map(()=>`
+    <div class="card" style="pointer-events:none">
+      <div style="display:flex;gap:12px;margin-bottom:14px">
+        <div class="skeleton" style="width:38px;height:38px;border-radius:10px;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div class="skeleton" style="height:13px;width:65%;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:10px;width:45%"></div>
+        </div>
+      </div>
+      <div class="skeleton" style="height:48px;border-radius:10px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:7px">
+        <div class="skeleton" style="flex:1;height:30px;border-radius:8px"></div>
+        <div class="skeleton" style="flex:1;height:30px;border-radius:8px"></div>
+        <div class="skeleton" style="flex:1;height:30px;border-radius:8px"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Rename ─────────────────────────────────────────────────────────────────
+function openRename(eid, name) {
+  renameTarget = eid;
+  document.getElementById('modalInp').value = name;
+  document.getElementById('modalPreview').textContent = name;
+  document.getElementById('modalSub').textContent = eid;
+  document.getElementById('modalOv').classList.add('open');
+  setTimeout(()=>document.getElementById('modalInp').focus(), 200);
+}
+function closeModal() {
+  document.getElementById('modalOv').classList.remove('open');
+  renameTarget = null;
+}
+document.getElementById('modalInp').addEventListener('input', function() {
+  document.getElementById('modalPreview').textContent = this.value || '…';
+});
+document.getElementById('modalOv').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+async function confirmRename() {
+  const newName = document.getElementById('modalInp').value.trim();
+  if (!newName || !renameTarget) return;
+
+  try {
+    // Mettre à jour via l'API HA entity registry
+    const res = await fetch(`${API_BASE}/api/config/entity_registry/${renameTarget}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName })
+    });
+
+    const entity = allEntities.find(e => e.entity_id === renameTarget);
+    if (entity) entity.attributes.friendly_name = newName;
+    closeModal();
+    renderCurrent();
+    toast(`✅ "${newName}" enregistré — Alexa va détecter le changement automatiquement`, 'success');
+  } catch {
+    toast('❌ Erreur lors du renommage', 'error');
+  }
+}
+
+// ── Toggle ─────────────────────────────────────────────────────────────────
+async function toggle(eid, dom) {
+  const btn = document.getElementById('tog-' + eid);
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+
+  const serviceMap = {
+    scene:  ['scene','turn_on'],
+    script: ['script','turn_on'],
+    cover:  ['cover','toggle'],
+    climate:['climate','toggle'],
+  };
+  const [svc_domain, svc] = serviceMap[dom] || ['homeassistant','toggle'];
+
+  try {
+    const res = await fetch(`${API_BASE}/api/services/${svc_domain}/${svc}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entity_id: eid })
+    });
+    if (res.ok) {
+      toast(`▶ Activé !`, 'success');
+      if (btn) { btn.textContent = '✅'; setTimeout(()=>{ btn.textContent='▶ Tester'; btn.disabled=false; }, 2000); }
+      setTimeout(load, 1500);
+    } else throw new Error();
+  } catch {
+    toast('❌ Erreur toggle', 'error');
+    if (btn) { btn.textContent='▶ Tester'; btn.disabled=false; }
+  }
+}
+
+// ── Copy ───────────────────────────────────────────────────────────────────
+function copyTxt(txt) {
+  navigator.clipboard.writeText(txt).then(()=>toast('📋 Copié !','success'));
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastT;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  const c = {success:'#06d6a0',error:'#ff4d6d',warning:'#ffd166',info:'#90b8ff'};
+  el.style.borderColor = c[type]||c.info;
+  el.style.color = c[type]||c.info;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>el.classList.remove('show'), 3500);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+load();
+setInterval(load, 60000); // Refresh toutes les minutes
+</script>
+</body>
+</html>

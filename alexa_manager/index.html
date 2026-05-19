@@ -373,23 +373,33 @@ document.getElementById('modalOv').addEventListener('click', e => { if(e.target=
 async function confirmRename() {
   const newName = document.getElementById('modalInp').value.trim();
   if (!newName || !renameTarget) return;
+  const target = renameTarget;
+  // UX : feedback immédiat sur le bouton
+  const btn = document.querySelector('.modal-btn.confirm');
+  const oldLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Enregistrement…';
   try {
     const res = await fetch(`${API_BASE}/rename`, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({entity_id: renameTarget, name: newName})
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({entity_id: target, name: newName})
     });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `HTTP ${res.status}`);
+      throw new Error(data.error || `HTTP ${res.status}`);
     }
     closeModal();
-    // Recharger depuis HA pour avoir la vraie valeur persistée
+    // On recharge depuis HA pour avoir la VRAIE valeur persistée
     await load();
     toast(`✅ "${newName}" enregistré — Alexa va détecter le changement`, 'success');
   } catch (e) {
-    console.error('rename:', e);
+    console.error('rename failed:', e);
     toast('❌ Erreur lors du renommage : ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldLabel;
   }
 }
 

@@ -230,7 +230,7 @@
 
 <script>
 // ── Dans l'add-on, l'API est proxifiée localement ──────────────────────────
-const API_BASE = '';   // Même origine, le serveur Python proxifie vers HA
+const API_BASE = window.location.origin + window.location.pathname.replace(/\/+$/, '').replace(/\/[^/]*$/, '');  // Même origine, le serveur Python proxifie vers HA
 let allEntities  = [];
 let currentTab   = 'lights';
 let renameTarget = null;

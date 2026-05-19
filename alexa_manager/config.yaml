@@ -1,5 +1,5 @@
 name: Alexa Manager
-version: "1.0.0"
+version: "1.0.1"
 slug: alexa_manager
 description: Gérez vos phrases vocales Alexa directement depuis Home Assistant
 url: https://github.com/zikoner/ha-addons

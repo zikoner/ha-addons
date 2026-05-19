@@ -9,3 +9,4 @@ WORKDIR /app
 EXPOSE 8099
 
 CMD ["python3", "server.py"]
+
